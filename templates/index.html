@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    {# {{ ... }} 用来标记变量。#}
+    <title>{{ name }}'s Watchlist</title>
+</head>
+<body>
+    <h2>{{ name }}'s Watchlist</h2>
+
+    {# 使用 |filter 过滤器处理变量，这里获取变量长度 #}
+    <p>{{ movies|length }} Titles</p>
+
+    <ul>
+        {% for movie in movies %}  {# 使用 for 语句迭代 movies 变量 #}
+        <li>{{ movie.title }} - {{ movie.year }}</li>  {# 等同于 movie['title'] #}
+        {% endfor %}  {# 使用 endfor 标签结束 for 语句 #}
+    </ul>
+
+    <footer>
+        <small>&copy; 2018 <a href="#">Flask</a></small>
+    </footer>
+</body>
+</html>
