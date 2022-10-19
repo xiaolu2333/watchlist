@@ -3,21 +3,27 @@
 <head>
     <meta charset="utf-8">
 
-    {# {{ ... }} 用来标记变量。#}
     <title>{{ name }}'s Watchlist</title>
+
+    {# 还是可以通过 url_for() 函数来获取静态资源的路径 #}
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
-    <h2>{{ name }}'s Watchlist</h2>
+    <h2>
+        <img alt="Avatar" class="avatar"  src="{{ url_for('static', filename='img/avatar.png') }}">
+        {{ name }}'s Watchlist
+    </h2>
 
-    {# 使用 |filter 过滤器处理变量，这里获取变量长度 #}
     <p>{{ movies|length }} Titles</p>
 
-    <ul>
-        {% for movie in movies %}  {# 使用 for 语句迭代 movies 变量 #}
-        <li>{{ movie.title }} - {{ movie.year }}</li>  {# 等同于 movie['title'] #}
-        {% endfor %}  {# 使用 endfor 标签结束 for 语句 #}
+    <ul class="movie-list">
+        {% for movie in movies %}
+        <li>{{ movie.title }} - {{ movie.year }}</li>
+        {% endfor %}
     </ul>
 
+    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
     <footer>
         <small>&copy; 2018 <a href="#">Flask</a></small>
     </footer>
