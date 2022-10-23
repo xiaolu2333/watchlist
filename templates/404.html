@@ -1,26 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>{{ user.name }}'s Watchlist</title>
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-</head>
-<body>
-    <h2>
-    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
-        {{ user.name }}'s Watchlist
-    </h2>
-    <ul class="movie-list">
-        <li>
-            Page Not Found - 404
-            <span class="float-right">
-                <a href="{{ url_for('index') }}">Go Back</a>
-            </span>
-        </li>
-    </ul>
-    <footer>
-        <small>&copy; 2018 <a href="#">Flask</a></small>
-    </footer>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<ul class="movie-list">
+    <li>
+        Page Not Found - 404
+        <span class="float-right">
+            <a href="{{ url_for('index') }}">Go Back</a>
+        </span>
+    </li>
+</ul>
+{% endblock %}

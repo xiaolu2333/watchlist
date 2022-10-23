@@ -215,22 +215,25 @@ def forge():
 # Done.
 
 
-@app.errorhandler(404)  # 传入要处理的错误代码
-# app.errorhandler() 装饰器注册一个错误处理函数。
-# 它的作用和视图函数类似，当 404 错误发生时，这个函数会被触发，返回值会作为响应主体返回给客户端
-def page_not_found(e):  # 接受异常对象作为参数
+@app.context_processor
+# 使用上下文处理器能将 user 作为全局变量传入所有模板。
+def inject_user():
     user = User.query.first()
-    return render_template('404.html', user=user), 404  # 返回模板和状态码
+    return dict(user=user)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 @app.route('/')
 def index():
-    user = User.query.first()  # 读取第一条用户记录
-    movies = Movie.query.all()  # 读取所有电影记录
-    return render_template('index.html', user=user, movies=movies)
+    movies = Movie.query.all()
+    return render_template('index.html', movies=movies)
 
 
 if __name__ == '__main__':
     app.run()
-    # 访问一个不存在的页面 http://127.0.0.1:5000/xxx
-    # 浏览器页面内容发生变化，显示了自定义的 404 页面
+    # 访问主页 http://127.0.0.1:5000
+    # 浏览器页面内容发生变化，点击 IMDb 链接，页面跳转到 IMDb 页面。

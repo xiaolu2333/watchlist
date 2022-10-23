@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{#  设置页面的视口，让页面根据设备的宽度来自动缩放页面，这样会让移动设备拥有更好的浏览体验  #}
+
+    <title>{{ user.name }}'s Watchlist</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <h2>
+        <img alt="Avatar" class="avatar"  src="{{ url_for('static', filename='img/avatar.png') }}">
+        {{ user.name }}'s Watchlist
+    </h2>
+
+    <p>{{ movies|length }} Titles</p>
+
+{#  一个导航栏#}
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+        </ul>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
+    <footer>
+        <small>&copy; 2018 <a href="#">Flask</a></small>
+    </footer>
+</body>
+</html>

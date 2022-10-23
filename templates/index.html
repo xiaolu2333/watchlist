@@ -1,31 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
+{#继承base.html模板#}
+{% extends 'base.html' %}
 
-    <title>{{ user.name }}'s Watchlist</title>
+{#默认的块重写行为是覆盖，如果你想向父块里追加内容，可以在子块中使用 super() 声明，即 {{ super() }}。#}
+{% block content %}
+<p>{{ movies|length }} Titles</p>
+<ul class="movie-list">
+    {% for movie in movies %}
+    <li>{{ movie.title }} - {{ movie.year }}
+{#      一个 IMDb 链接：href 属性的值为 IMDb 搜索页面的 URL，通过查询参数 q 传入搜索关键词，这里传入了电影的标题。#}
+        <span class="float-right">
+            <a class="imdb" href="https://www.imdb.com/find?q={{ movie.title }}" target="_blank" title="Find this movie on IMDb">IMDb</a>
+        </span>
+    </li>
+    {% endfor %}
+</ul>
 
-    {# 还是可以通过 url_for() 函数来获取静态资源的路径 #}
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-</head>
-<body>
-    <h2>
-        <img alt="Avatar" class="avatar"  src="{{ url_for('static', filename='img/avatar.png') }}">
-        {{ user.name }}'s Watchlist
-    </h2>
-
-    <p>{{ movies|length }} Titles</p>
-
-    <ul class="movie-list">
-        {% for movie in movies %}
-        <li>{{ movie.title }} - {{ movie.year }}</li>
-        {% endfor %}
-    </ul>
-
-    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
-    <footer>
-        <small>&copy; 2018 <a href="#">Flask</a></small>
-    </footer>
-</body>
-</html>
+<img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='images/totoro.gif') }}" title="to~to~ro~">
+{% endblock %}
