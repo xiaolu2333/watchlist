@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>{{ name }}'s Watchlist</title>
+    <title>{{ user.name }}'s Watchlist</title>
 
     {# 还是可以通过 url_for() 函数来获取静态资源的路径 #}
     <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
@@ -12,7 +12,8 @@
 <body>
     <h2>
         <img alt="Avatar" class="avatar"  src="{{ url_for('static', filename='img/avatar.png') }}">
-        {{ name }}'s Watchlist
+        {{ user.name }}'s Watchlist
+
     </h2>
 
     <p>{{ movies|length }} Titles</p>
