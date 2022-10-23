@@ -43,10 +43,6 @@ class Movie(db.Model):
 # 修改数据模型后，需要重新生成数据库迁移脚本，然后再执行脚本更新数据库。
 # Flask 数据库迁移 flask-migrate： https://cloud.tencent.com/developer/article/1585940
 
-
-
-
-
 # 7，一般会创建一个来自动执行创建数据库表操作的自定义命令：
 import click
 @app.cli.command()  # 注册为命令，可以传入 name 参数来自定义命令，否则函数名称就是命令的名字
@@ -59,7 +55,6 @@ def initdb(drop):
     click.echo('Initialized database.')  # 输出提示信息
 # 然后在命令行中执行 flask initdb 命令，就会自动创建数据库表了。
 # 如果想要删除表后重新创建，可以执行 flask initdb --drop 命令。
-
 
 # 8，数据库基本的CRUD操作
 # 8.1，创建数据
@@ -185,14 +180,7 @@ def initdb(drop):
 # Flask-SQLAlchemy：https://flask-sqlalchemy.palletsprojects.com/en/2.x/
 
 
-@app.route('/')
-def index():
-    user = User.query.first()  # 读取第一条用户记录
-    movies = Movie.query.all()  # 读取所有电影记录
-    return render_template('index.html', user=user, movies=movies)
-
-
-# 向数据库插入测试数据。通过
+# 向数据库插入测试数据。
 import click
 @app.cli.command()
 def forge():
@@ -227,7 +215,22 @@ def forge():
 # Done.
 
 
+@app.errorhandler(404)  # 传入要处理的错误代码
+# app.errorhandler() 装饰器注册一个错误处理函数。
+# 它的作用和视图函数类似，当 404 错误发生时，这个函数会被触发，返回值会作为响应主体返回给客户端
+def page_not_found(e):  # 接受异常对象作为参数
+    user = User.query.first()
+    return render_template('404.html', user=user), 404  # 返回模板和状态码
+
+
+@app.route('/')
+def index():
+    user = User.query.first()  # 读取第一条用户记录
+    movies = Movie.query.all()  # 读取所有电影记录
+    return render_template('index.html', user=user, movies=movies)
+
+
 if __name__ == '__main__':
     app.run()
-    # 再次访问 http://127.0.0.1:5000
-    # 浏览器页面内容发生变化，显示了数据库中的数据
+    # 访问一个不存在的页面 http://127.0.0.1:5000/xxx
+    # 浏览器页面内容发生变化，显示了自定义的 404 页面

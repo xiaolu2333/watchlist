@@ -36,6 +36,12 @@ footer {
     border-bottom:none;
 }
 
+.movie-list a {
+    text-decoration: none;
+    /* 位居右侧 */
+    float: right;
+}
+
 .movie-list li:hover {
     background-color: #f8f9fa;
 }

@@ -2,28 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-
     <title>{{ user.name }}'s Watchlist</title>
-
-    {# 还是可以通过 url_for() 函数来获取静态资源的路径 #}
     <link rel="icon" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
     <h2>
-        <img alt="Avatar" class="avatar"  src="{{ url_for('static', filename='img/avatar.png') }}">
+    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
         {{ user.name }}'s Watchlist
     </h2>
-
-    <p>{{ movies|length }} Titles</p>
-
     <ul class="movie-list">
-        {% for movie in movies %}
-        <li>{{ movie.title }} - {{ movie.year }}</li>
-        {% endfor %}
+        <li>
+            Page Not Found - 404
+            <span class="float-right">
+                <a href="{{ url_for('index') }}">Go Back</a>
+            </span>
+        </li>
     </ul>
-
-    <img alt="Walking Totoro" class="totoro" src="{{ url_for('static', filename='img/totoro.gif') }}">
     <footer>
         <small>&copy; 2018 <a href="#">Flask</a></small>
     </footer>
