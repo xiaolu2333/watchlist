@@ -2,7 +2,7 @@ import os
 import sys
 
 from flask import Flask, render_template, request, flash, redirect, url_for
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -281,6 +281,10 @@ def page_not_found(e):
 
 # 使用 Flask-Login 步骤一：创建用户加载回调函数
 login_manager = LoginManager(app)  # 实例化扩展类
+login_manager.login_view = 'login'  # 未登录时重定向到登录页面
+login_manager.login_message = "Please log in to do this!"    # 自定义错误提示消息
+
+
 @login_manager.user_loader
 def load_user(user_id):  # 创建用户加载回调函数，接受用户 ID 作为参数。当程序运行后，如果用户已登录， current_user 变量的值会是当前用户的用户模型类记录
     user = User.query.get(int(user_id))  # 用 ID 作为 User 模型的主键查询对应的用户
@@ -304,6 +308,8 @@ def index():
         请求头（request.headers）
         文件数据（request.files）
         """
+        if not current_user.is_authenticated:  # 使用 Flask-Login 提供的 current_user 变量，判断用户是否登录
+            return redirect(url_for('index'))  # 重定向到主页
         # 获取表单数据
         title = request.form.get('title')  # 传入表单对应输入字段的 name 值
         year = request.form.get('year')
@@ -331,6 +337,7 @@ def index():
 
 
 @app.route('/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
+@login_required
 def edit(movie_id):
     """条目编辑视图函数"""
     movie = Movie.query.get_or_404(movie_id)
@@ -352,14 +359,15 @@ def edit(movie_id):
     return render_template('edit.html', movie=movie)  # 传入被编辑的电影记录
 
 
-@app.route('/movie/delete/<int:movie_id>', methods=['POST'])  # 限定只接受 POST 请求
+@app.route('/movie/delete/<int:movie_id>', methods=['POST'])
+@login_required  # 仅登录可访问。如果未登录的用户访问对应的 URL，Flask-Login 会把用户重定向到 login_manager.login_view 指定的登录页面。
 def delete(movie_id):
     """条目删除视图函数"""
-    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
-    db.session.delete(movie)  # 删除对应的记录
-    db.session.commit()  # 提交数据库会话
+    movie = Movie.query.get_or_404(movie_id)
+    db.session.delete(movie)
+    db.session.commit()
     flash('Item deleted.')
-    return redirect(url_for('index'))  # 重定向回主页
+    return redirect(url_for('index'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -393,6 +401,29 @@ def logout():
     logout_user()  # 使用 Flask_Login 的 logout_user 函数实现用户登出
     flash('Goodbye.')
     return redirect(url_for('index'))  # 重定向回首页
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    """用户设置视图"""
+    if request.method == 'POST':
+        name = request.form['name']
+
+        if not name or len(name) > 20:
+            flash('Invalid input.')
+            return redirect(url_for('settings'))
+
+        current_user.name = name    # 更新用户名
+        # current_user 会返回当前登录用户的数据库记录对象
+        # 等同于下面的用法
+        # user = User.query.first()
+        # user.name = name
+        db.session.commit()
+        flash('Settings updated.')
+        return redirect(url_for('index'))
+
+    return render_template('settings.html')
 
 
 if __name__ == '__main__':

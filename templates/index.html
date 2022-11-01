@@ -5,12 +5,15 @@
 {% block content %}
 <p>{{ movies|length }} Titles</p>
 
-{# 向 / 以 POST 方法提交表单 #}
-<form action="/" method="post">
+{#    仅让登陆的用户创建条目    #}
+<!-- 在模板中可以直接使用 current_user 变量 -->
+{% if current_user.is_authenticated %}
+<form method="post">
     Name <input type="text" name="title" autocomplete="off" required>
     Year <input type="text" name="year" autocomplete="off" required>
     <input class="btn" type="submit" name="submit" value="Add">
 </form>
+{% endif %}
 
 <ul class="movie-list">
     {% for movie in movies %}
@@ -18,10 +21,13 @@
 {#      一个 IMDb 链接：href 属性的值为 IMDb 搜索页面的 URL，通过查询参数 q 传入搜索关键词，这里传入了电影的标题。#}
         <span class="float-right">
             <a class="imdb" href="https://www.imdb.com/find?q={{ movie.title }}" target="_blank" title="Find this movie on IMDb">IMDb</a>
-            <a class="btn" href="{{ url_for('edit', movie_id=movie.id) }}">Edit</a>
-            <form class="inline-form" method="post" action="{{ url_for('delete', movie_id=movie.id) }}">
-                <input class="btn" type="submit" name="delete" value="Delete" onclick="return confirm('Are you sure?')">
-            </form>
+{#        仅让登陆的用户编辑和删除条目      #}
+            {% if current_user.is_authenticated %}
+                <a class="btn" href="{{ url_for('edit', movie_id=movie.id) }}">Edit</a>
+                <form class="inline-form" method="post" action="{{ url_for('.delete', movie_id=movie.id) }}">
+                    <input class="btn" type="submit" name="delete" value="Delete" onclick="return confirm('Are you sure?')">
+                </form>
+            {% endif %}
         </span>
     </li>
     {% endfor %}
