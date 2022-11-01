@@ -2,6 +2,7 @@ import os
 import sys
 
 from flask import Flask, render_template, request, flash, redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -34,7 +35,7 @@ app.config['SECRET_KEY'] = 'dev'  # 等同于 app.secret_key = 'dev'
 # Models
 #####################################################################
 # 5，定义数据模型
-class User(db.Model):  # 表名将会是 user（自动生成，小写处理）
+class User(db.Model, UserMixin):  # 表名将会是 user（自动生成，小写处理）。使用 Flask-Login 步骤二：让 User 模型继承 UserMixin 类，从而让 User 类拥有几个用于判断认证状态的属性和方法，
     # 如果自定义表名，可以定义 __tablename__ 属性。
     id = db.Column(db.Integer, primary_key=True)  # 主键
     name = db.Column(db.String(20))  # 名字
@@ -278,6 +279,14 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
+# 使用 Flask-Login 步骤一：创建用户加载回调函数
+login_manager = LoginManager(app)  # 实例化扩展类
+@login_manager.user_loader
+def load_user(user_id):  # 创建用户加载回调函数，接受用户 ID 作为参数。当程序运行后，如果用户已登录， current_user 变量的值会是当前用户的用户模型类记录
+    user = User.query.get(int(user_id))  # 用 ID 作为 User 模型的主键查询对应的用户
+    return user  # 返回用户对象
+
+
 #####################################################################
 # views
 #####################################################################
@@ -323,6 +332,7 @@ def index():
 
 @app.route('/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
 def edit(movie_id):
+    """条目编辑视图函数"""
     movie = Movie.query.get_or_404(movie_id)
 
     if request.method == 'POST':  # 处理编辑表单的提交请求
@@ -344,11 +354,45 @@ def edit(movie_id):
 
 @app.route('/movie/delete/<int:movie_id>', methods=['POST'])  # 限定只接受 POST 请求
 def delete(movie_id):
+    """条目删除视图函数"""
     movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
     db.session.delete(movie)  # 删除对应的记录
     db.session.commit()  # 提交数据库会话
     flash('Item deleted.')
     return redirect(url_for('index'))  # 重定向回主页
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """用户登录视图函数"""
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password:
+            flash('Invalid input.')
+            return redirect(url_for('login'))
+
+        user = User.query.first()
+        # 验证用户名和密码是否一致
+        if username == user.username and user.validate_password(password):
+            login_user(user)  # 使用 Flask_Login 的 login_user 函数实现用户登录
+            flash('Login success.')
+            return redirect(url_for('index'))  # 重定向到主页
+
+        flash('Invalid username or password.')  # 如果验证失败，显示错误消息
+        return redirect(url_for('login'))  # 重定向回登录页面
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required  # 用于视图保护，后面会详细介绍
+def logout():
+    """用户登出视图函数"""
+    logout_user()  # 使用 Flask_Login 的 logout_user 函数实现用户登出
+    flash('Goodbye.')
+    return redirect(url_for('index'))  # 重定向回首页
 
 
 if __name__ == '__main__':
