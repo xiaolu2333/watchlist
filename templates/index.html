@@ -4,6 +4,14 @@
 {#默认的块重写行为是覆盖，如果你想向父块里追加内容，可以在子块中使用 super() 声明，即 {{ super() }}。#}
 {% block content %}
 <p>{{ movies|length }} Titles</p>
+
+{# 向 / 以 POST 方法提交表单 #}
+<form action="/" method="post">
+    Name <input type="text" name="title" autocomplete="off" required>
+    Year <input type="text" name="year" autocomplete="off" required>
+    <input class="btn" type="submit" name="submit" value="Add">
+</form>
+
 <ul class="movie-list">
     {% for movie in movies %}
     <li>{{ movie.title }} - {{ movie.year }}

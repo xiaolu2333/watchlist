@@ -1,7 +1,7 @@
 import os
 import sys
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 # 1，根据系统设置数据库文件的路径前缀
@@ -227,8 +227,48 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
-@app.route('/')
+# 设置签名所需的密钥，用于保护表单免受跨站请求伪造（Cross-site Request Forgery）的攻击。
+app.config['SECRET_KEY'] = 'dev'  # 等同于 app.secret_key = 'dev'
+# 这个密钥的值在开发时可以随便设置。
+# 基于安全的考虑，在部署时应该设置为随机字符，且不应该明文写在代码里，在部署章节会详细介绍。
+
+
+@app.route('/', methods=['GET', 'POST'])    # 让视图函数支持 GET 和 POST 请求。
 def index():
+    """主页视图函数"""
+    # 对于 POST 请求，则获取提交的表单数据并保存。
+    if request.method == 'POST':  # 判断是否是 POST 请求
+        """ request 是 Flask 提供的一个全局对象，它封装了客户端发出的 HTTP 请求中的内容：
+        请求的路径（request.path）
+        请求的方法（request.method）
+        表单数据（request.form）
+        查询字符串（request.args）
+        远程地址（request.remote_addr）
+        请求头（request.headers）
+        文件数据（request.files）
+        """
+        # 获取表单数据
+        title = request.form.get('title')  # 传入表单对应输入字段的 name 值
+        year = request.form.get('year')
+        # 验证数据
+        if not title or not year or len(year) > 4 or len(title) > 60:
+            """
+            在真实工作里会进行更严苛的验证，比如对数据去除首尾的空格。
+            一般情况下，我们会使用第三方库（比如 WTForms）来实现表单数据的验证工作。
+            """
+            flash('Invalid input.')  # 显示错误提示
+            """ flash() 函数用来在视图函数里向模板传递提示消息
+            该函数会把消息存储到 Flask 提供的 session 对象里，session 对象会把数据存储到浏览器的 cookie 里，记得要设置签名密钥。
+            可以在模板中使用 get_flashed_messages() 函数获取到所有的提示消息。
+            """
+            return redirect(url_for('index'))  # 重定向回主页
+        # 保存表单数据到数据库
+        movie = Movie(title=title, year=year)  # 创建记录
+        db.session.add(movie)  # 添加到数据库会话
+        db.session.commit()  # 提交数据库会话
+        flash('Item created.')  # 显示成功创建的提示
+        return redirect(url_for('index'))  # 重定向回主页
+    # 对于 GET 请求，返回渲染后的页面；
     movies = Movie.query.all()
     return render_template('index.html', movies=movies)
 
