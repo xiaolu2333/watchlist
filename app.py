@@ -3,7 +3,11 @@ import sys
 
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
+#####################################################################
+# Configuration
+#####################################################################
 # 1，根据系统设置数据库文件的路径前缀
 WIN = sys.platform.startswith('win')
 if WIN:  # 如果是 Windows 系统，使用三个斜线
@@ -20,12 +24,29 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # 4，初始化扩展，传入程序实例 app，这样才能使用 app.config 配置参数
 db = SQLAlchemy(app)
 
+# 设置签名所需的密钥，用于保护表单免受跨站请求伪造（Cross-site Request Forgery）的攻击。
+app.config['SECRET_KEY'] = 'dev'  # 等同于 app.secret_key = 'dev'
+# 这个密钥的值在开发时可以随便设置。
+# 基于安全的考虑，在部署时应该设置为随机字符，且不应该明文写在代码里，在部署章节会详细介绍。
 
+
+#####################################################################
+# Models
+#####################################################################
 # 5，定义数据模型
 class User(db.Model):  # 表名将会是 user（自动生成，小写处理）
     # 如果自定义表名，可以定义 __tablename__ 属性。
     id = db.Column(db.Integer, primary_key=True)  # 主键
     name = db.Column(db.String(20))  # 名字
+    username = db.Column(db.String(20))  # 用户名
+    password_hash = db.Column(db.String(128))  # 密码散列值
+
+    def set_password(self, password):  # 用来设置密码的方法，接受密码作为参数
+        self.password_hash = generate_password_hash(password)  # 将生成的密码保持到对应字段
+
+    def validate_password(self, password):  # 用于验证密码的方法，接受密码作为参数
+        return check_password_hash(self.password_hash, password)  # 返回布尔值
+# 因为模型（表结构）发生变化，我们需要重新生成数据库（这会清空数据）：flask initdb --drop
 
 
 class Movie(db.Model):
@@ -44,6 +65,9 @@ class Movie(db.Model):
 # Flask 数据库迁移 flask-migrate： https://cloud.tencent.com/developer/article/1585940
 
 # 7，一般会创建一个来自动执行创建数据库表操作的自定义命令：
+#####################################################################
+# Commands
+#####################################################################
 import click
 @app.cli.command()  # 注册为命令，可以传入 name 参数来自定义命令，否则函数名称就是命令的名字
 @click.option('--drop', is_flag=True, help='Create after drop.')  # 设置选项
@@ -215,6 +239,33 @@ def forge():
 # Done.
 
 
+@app.cli.command()
+@click.option('--username', prompt=True, help='The username used to login.')
+@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='The password used to login.')
+def admin(username, password):
+    """Create user."""
+    db.create_all()
+
+    user = User.query.first()
+    if user is not None:
+        click.echo('Updating user...')
+        user.username = username
+        user.set_password(password)  # 设置密码
+    else:
+        click.echo('Creating user...')
+        user = User(username=username, name='Admin')
+        user.set_password(password)  # 设置密码
+        db.session.add(user)
+
+    db.session.commit()  # 提交数据库会话
+    click.echo('Done.')
+# 通过 flask admin 命令创建管理员账户：xiaolu，密码：123456
+# 更多的用户管理功能通常使用 Flask-Login：https://flask-login.readthedocs.io/en/latest/
+
+
+#####################################################################
+# 处理工具
+#####################################################################
 @app.context_processor
 # 使用上下文处理器能将 user 作为全局变量传入所有模板。
 def inject_user():
@@ -227,12 +278,9 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
-# 设置签名所需的密钥，用于保护表单免受跨站请求伪造（Cross-site Request Forgery）的攻击。
-app.config['SECRET_KEY'] = 'dev'  # 等同于 app.secret_key = 'dev'
-# 这个密钥的值在开发时可以随便设置。
-# 基于安全的考虑，在部署时应该设置为随机字符，且不应该明文写在代码里，在部署章节会详细介绍。
-
-
+#####################################################################
+# views
+#####################################################################
 @app.route('/', methods=['GET', 'POST'])    # 让视图函数支持 GET 和 POST 请求。
 def index():
     """主页视图函数"""
