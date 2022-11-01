@@ -294,6 +294,15 @@ def edit(movie_id):
     return render_template('edit.html', movie=movie)  # 传入被编辑的电影记录
 
 
+@app.route('/movie/delete/<int:movie_id>', methods=['POST'])  # 限定只接受 POST 请求
+def delete(movie_id):
+    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
+    db.session.delete(movie)  # 删除对应的记录
+    db.session.commit()  # 提交数据库会话
+    flash('Item deleted.')
+    return redirect(url_for('index'))  # 重定向回主页
+
+
 if __name__ == '__main__':
     app.run()
     # 访问主页 http://127.0.0.1:5000
